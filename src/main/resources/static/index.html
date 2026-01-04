@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Logistics Dashboard - Real Time</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: sans-serif; }
+        #map { height: 100vh; width: 100%; } /* Mapa pantalla completa */
+        .info-box {
+            position: absolute; top: 10px; right: 10px; z-index: 1000;
+            background: white; padding: 15px; border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+<div class="info-box">
+    <h3>🚚 Monitoreo en Vivo</h3>
+    <p>Conexión: <span id="status" style="color:orange">Conectando...</span></p>
+    <p>Eventos recibidos: <span id="counter">0</span></p>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // 1. Inicializar el mapa centrado en Lima, Perú
+    const map = L.map('map').setView([-12.046374, -77.042793], 13);
+
+    // Cargar capas de OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Diccionario para guardar los marcadores de los camiones
+    const truckMarkers = {};
+    let eventCount = 0;
+
+    // 2. Conectar al Backend Reactivo (SSE)
+    // EventSource consume el stream sin recargar la página
+    const eventSource = new EventSource("http://localhost:8080/api/trucks/stream");
+
+    const statusLabel = document.getElementById("status");
+    const counterLabel = document.getElementById("counter");
+
+    eventSource.onopen = () => {
+        statusLabel.innerText = "🟢 En Línea (Stream Activo)";
+        statusLabel.style.color = "green";
+    };
+
+    eventSource.onerror = () => {
+        statusLabel.innerText = "🔴 Desconectado";
+        statusLabel.style.color = "red";
+    };
+
+    // 3. Procesar cada mensaje que llega del servidor
+    eventSource.onmessage = (event) => {
+        const truck = JSON.parse(event.data);
+        eventCount++;
+        counterLabel.innerText = eventCount;
+
+        // Si el camión ya tiene marcador, lo movemos
+        if (truckMarkers[truck.plateNumber]) {
+            const marker = truckMarkers[truck.plateNumber];
+            marker.setLatLng([truck.latitude, truck.longitude]);
+            marker.bindPopup(`<b>${truck.plateNumber}</b><br>Vel: ${truck.speed.toFixed(1)} km/h`);
+        } else {
+            // Si es nuevo, creamos un marcador nuevo
+            const newMarker = L.marker([truck.latitude, truck.longitude]).addTo(map);
+            newMarker.bindPopup(`<b>${truck.plateNumber}</b><br>Vel: ${truck.speed.toFixed(1)} km/h`);
+            truckMarkers[truck.plateNumber] = newMarker;
+        }
+    };
+</script>
+</body>
+</html>

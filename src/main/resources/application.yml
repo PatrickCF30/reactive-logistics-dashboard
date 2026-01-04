@@ -1,0 +1,10 @@
+spring:
+    application:
+        name: logistics-dashboard
+
+    data:
+        mongodb:
+            # Conexión directa al contenedor Docker
+            # Formato: mongodb://usuario:password@host:puerto/nombre_db?authSource=admin
+            uri: mongodb://admin:password@localhost:27017/logistics_db?authSource=admin
+            auto-index-creation: true # Para que cree índices geoespaciales automáticamente
