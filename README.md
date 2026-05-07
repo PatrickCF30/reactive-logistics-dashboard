@@ -11,7 +11,7 @@ conexiones de streaming.
 * **Geoespacial:** Manejo de coordenadas (Latitud/Longitud) y visualización en mapa interactivo.
 * **Full Stack:** Backend Java 21 y Frontend ligero con HTML5 + Leaflet.js.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 * **Lenguaje:** Java 21
 * **Framework:** Spring Boot 3.5 (WebFlux)
